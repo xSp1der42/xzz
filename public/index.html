@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Chat - Видеозвонки и Чат</title>
+    <title>Discord Clone - Демонстрация экрана</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,8 +11,30 @@
         <!-- Экран входа -->
         <div id="login-screen" class="screen active">
             <div class="login-box">
-                <h1>🎮 Simple Chat</h1>
-                <p>Минималистичный мессенджер для общения</p>
+                <h1>💬 Discord Clone</h1>
+                <p>Демонстрация экрана и чат</p>
+                
+                <div class="avatar-selector">
+                    <p>Выбери аватарку:</p>
+                    <div class="avatar-grid">
+                        <div class="avatar-option" data-avatar="😀">😀</div>
+                        <div class="avatar-option" data-avatar="😎">😎</div>
+                        <div class="avatar-option" data-avatar="🤖">🤖</div>
+                        <div class="avatar-option" data-avatar="👾">👾</div>
+                        <div class="avatar-option" data-avatar="🦄">🦄</div>
+                        <div class="avatar-option" data-avatar="🐱">🐱</div>
+                        <div class="avatar-option" data-avatar="🐶">🐶</div>
+                        <div class="avatar-option" data-avatar="🦊">🦊</div>
+                        <div class="avatar-option" data-avatar="🐼">🐼</div>
+                        <div class="avatar-option" data-avatar="🐨">🐨</div>
+                        <div class="avatar-option" data-avatar="🦁">🦁</div>
+                        <div class="avatar-option" data-avatar="🐯">🐯</div>
+                    </div>
+                    <div class="selected-avatar">
+                        <span id="preview-avatar">😀</span>
+                    </div>
+                </div>
+                
                 <input type="text" id="username-input" placeholder="Введите ваше имя" maxlength="20">
                 <button id="join-btn" class="btn-primary">Войти</button>
             </div>
@@ -22,14 +44,15 @@
         <div id="main-screen" class="screen">
             <div class="sidebar">
                 <div class="sidebar-header">
-                    <h2>Simple Chat</h2>
+                    <h2>💬 Discord Clone</h2>
                     <div class="user-info">
+                        <span id="user-avatar" class="user-avatar-icon">😀</span>
                         <span id="current-username"></span>
                     </div>
                 </div>
                 
                 <div class="friends-section">
-                    <h3>👥 Друзья (<span id="friends-count">0</span>)</h3>
+                    <h3>👥 Друзья онлайн (<span id="friends-count">0</span>)</h3>
                     <div id="friends-list" class="users-list"></div>
                 </div>
 
@@ -38,27 +61,22 @@
                     <div id="users-list" class="users-list"></div>
                 </div>
 
-                <div class="call-controls">
-                    <button id="start-call-btn" class="btn-call" disabled>
-                        📹 Видеозвонок
-                    </button>
-                    <button id="start-audio-btn" class="btn-call" disabled>
-                        🎤 Аудиозвонок
+                <div class="screen-share-controls">
+                    <button id="share-screen-btn" class="btn-screen-share" disabled>
+                        🖥️ Демонстрация экрана
                     </button>
                 </div>
             </div>
 
             <div class="main-content">
-                <!-- Видео секция -->
-                <div id="video-section" class="video-section hidden">
-                    <div class="video-container">
-                        <video id="remote-video" autoplay playsinline></video>
-                        <video id="local-video" autoplay playsinline muted></video>
-                        <div class="video-controls">
-                            <button id="toggle-video-btn" class="control-btn">📹</button>
-                            <button id="toggle-audio-btn" class="control-btn">🎤</button>
-                            <button id="end-call-btn" class="control-btn end-call">📵 Завершить</button>
-                        </div>
+                <!-- Демонстрация экрана -->
+                <div id="screen-section" class="screen-display hidden">
+                    <div class="screen-header">
+                        <span id="screen-owner">Экран пользователя</span>
+                    </div>
+                    <video id="remote-screen" autoplay playsinline></video>
+                    <div class="screen-controls" id="screen-controls" style="display: none;">
+                        <button id="stop-share-btn" class="btn-stop">📵 Остановить демонстрацию</button>
                     </div>
                 </div>
 
@@ -76,14 +94,14 @@
             </div>
         </div>
 
-        <!-- Модальное окно входящего звонка -->
-        <div id="incoming-call-modal" class="modal hidden">
+        <!-- Модальное окно входящей демонстрации -->
+        <div id="incoming-screen-modal" class="modal hidden">
             <div class="modal-content">
-                <h2>📞 Входящий звонок</h2>
-                <p id="caller-name"></p>
+                <h2>🖥️ Входящая демонстрация экрана</h2>
+                <p id="screen-caller-name"></p>
                 <div class="modal-buttons">
-                    <button id="accept-call-btn" class="btn-success">✅ Принять</button>
-                    <button id="reject-call-btn" class="btn-danger">❌ Отклонить</button>
+                    <button id="accept-screen-btn" class="btn-success">✅ Смотреть</button>
+                    <button id="reject-screen-btn" class="btn-danger">❌ Отклонить</button>
                 </div>
             </div>
         </div>
@@ -93,4 +111,3 @@
     <script src="app.js"></script>
 </body>
 </html>
-
