@@ -17,19 +17,27 @@ const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
 const messagesEl = document.getElementById('messages');
 
-// Кнопки демонстрации экрана
+// Кнопки звонков
+const voiceCallBtn = document.getElementById('voice-call-btn');
 const shareScreenBtn = document.getElementById('share-screen-btn');
-const stopShareBtn = document.getElementById('stop-share-btn');
-const screenSection = document.getElementById('screen-section');
-const remoteScreen = document.getElementById('remote-screen');
-const screenOwnerEl = document.getElementById('screen-owner');
-const screenControlsEl = document.getElementById('screen-controls');
+const endCallBtn = document.getElementById('end-call-btn');
+
+// Видео секция
+const videoSection = document.getElementById('video-section');
+const callStatus = document.getElementById('call-status');
+const remoteVideo = document.getElementById('remote-video');
+const localVideo = document.getElementById('local-video');
+
+// Чат
+const chatTitle = document.getElementById('chat-title');
+const backToGeneralBtn = document.getElementById('back-to-general-btn');
 
 // Модальное окно
-const incomingScreenModal = document.getElementById('incoming-screen-modal');
-const screenCallerNameEl = document.getElementById('screen-caller-name');
-const acceptScreenBtn = document.getElementById('accept-screen-btn');
-const rejectScreenBtn = document.getElementById('reject-screen-btn');
+const incomingCallModal = document.getElementById('incoming-call-modal');
+const callTypeTitle = document.getElementById('call-type-title');
+const callCallerNameEl = document.getElementById('call-caller-name');
+const acceptCallBtn = document.getElementById('accept-call-btn');
+const rejectCallBtn = document.getElementById('reject-call-btn');
 
 // Переменные
 let currentUsername = '';
@@ -37,15 +45,19 @@ let currentAvatar = '😀';
 let localStream = null;
 let peerConnection = null;
 let remoteSocketId = null;
-let isSharing = false;
+let remoteUsername = null;
+let isInCall = false;
+let currentCallType = null; // 'voice', 'screen'
 let friendsList = new Set();
+let currentChatUser = null; // null = общий чат
 
 // Конфигурация WebRTC
 const rtcConfig = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' }
+        { urls: 'stun1.l.google.com:19302' },
+        { urls: 'stun2.l.google.com:19302' },
+        { urls: 'stun:stun.services.mozilla.com' }
     ]
 };
 
@@ -93,32 +105,82 @@ messageInput.addEventListener('keypress', (e) => {
 
 function sendMessage() {
     const message = messageInput.value.trim();
-    if (message) {
+    if (!message) return;
+    
+    if (currentChatUser) {
+        // Отправляем приватное сообщение
+        socket.emit('private-message', { 
+            to: currentChatUser, 
+            message 
+        });
+    } else {
+        // Отправляем в общий чат
         socket.emit('chat-message', { message });
-        messageInput.value = '';
     }
+    
+    messageInput.value = '';
 }
 
+// Получение сообщений общего чата
 socket.on('chat-message', (data) => {
+    if (currentChatUser) return; // Не показываем, если в приватном чате
+    
+    displayMessage(data);
+});
+
+// Получение приватных сообщений
+socket.on('private-message', (data) => {
+    // Показываем только если это наш текущий чат
+    if (currentChatUser === data.from || currentChatUser === data.to) {
+        displayMessage(data, true);
+    }
+});
+
+// Получение истории приватных сообщений
+socket.on('private-messages-history', (data) => {
+    messagesEl.innerHTML = '';
+    data.messages.forEach(msg => displayMessage(msg, true));
+});
+
+function displayMessage(data, isPrivate = false) {
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message';
+    messageDiv.className = 'message' + (isPrivate ? ' private' : '');
     messageDiv.innerHTML = `
         <div class="message-header">
             <span class="message-avatar">${data.avatar || '😀'}</span>
-            <span class="message-username">${data.username}</span>
+            <span class="message-username">${data.from || data.username}</span>
             <span class="message-time">${data.timestamp}</span>
         </div>
         <div class="message-text">${escapeHtml(data.message)}</div>
     `;
     messagesEl.appendChild(messageDiv);
     messagesEl.scrollTop = messagesEl.scrollHeight;
-});
+}
 
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
+
+// Переключение в личный чат
+function openPrivateChat(username) {
+    currentChatUser = username;
+    chatTitle.textContent = `💬 Чат с ${username}`;
+    backToGeneralBtn.classList.remove('hidden');
+    messagesEl.innerHTML = '';
+    
+    // Запрашиваем историю
+    socket.emit('get-private-messages', { username });
+}
+
+// Возврат в общий чат
+backToGeneralBtn.addEventListener('click', () => {
+    currentChatUser = null;
+    chatTitle.textContent = '💬 Общий чат';
+    backToGeneralBtn.classList.add('hidden');
+    messagesEl.innerHTML = '';
+});
 
 // === СПИСОК ПОЛЬЗОВАТЕЛЕЙ ===
 let onlineUsers = new Map();
@@ -137,8 +199,10 @@ socket.on('users-update', (usersData) => {
         }
     });
     
-    // Обновляем кнопку демонстрации
-    shareScreenBtn.disabled = usersData.length <= 1;
+    // Обновляем кнопки
+    const hasOtherUsers = usersData.length > 1;
+    voiceCallBtn.disabled = !hasOtherUsers;
+    shareScreenBtn.disabled = !hasOtherUsers;
     
     // Обновляем список друзей
     updateFriendsList();
@@ -184,6 +248,20 @@ function createUserItem(userData, isFriend) {
         <span class="user-name-text">${userData.username}</span>
     `;
     
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.style.display = 'flex';
+    buttonsDiv.style.gap = '5px';
+    
+    // Кнопка личного чата
+    const chatBtn = document.createElement('button');
+    chatBtn.className = 'chat-btn';
+    chatBtn.textContent = '💬';
+    chatBtn.title = 'Личный чат';
+    chatBtn.onclick = (e) => {
+        e.stopPropagation();
+        openPrivateChat(userData.username);
+    };
+    
     // Кнопка добавления/удаления из друзей
     const friendBtn = document.createElement('button');
     friendBtn.className = 'friend-btn';
@@ -205,25 +283,93 @@ function createUserItem(userData, isFriend) {
         };
     }
     
-    userDiv.appendChild(userInfo);
-    userDiv.appendChild(friendBtn);
+    buttonsDiv.appendChild(chatBtn);
+    buttonsDiv.appendChild(friendBtn);
     
-    // Клик для выбора пользователя для демонстрации
+    userDiv.appendChild(userInfo);
+    userDiv.appendChild(buttonsDiv);
+    
+    // Клик для выбора пользователя для звонка
     userDiv.addEventListener('click', () => {
+        if (isInCall) return;
+        
         document.querySelectorAll('.user-item').forEach(u => u.classList.remove('selected'));
         userDiv.classList.add('selected');
         remoteSocketId = userData.socketId;
+        remoteUsername = userData.username;
+        voiceCallBtn.disabled = false;
         shareScreenBtn.disabled = false;
     });
     
     return userDiv;
 }
 
+// === ГОЛОСОВОЙ ЗВОНОК ===
+
+voiceCallBtn.addEventListener('click', async () => {
+    if (!remoteSocketId || !remoteUsername) {
+        alert('Выберите пользователя из списка!');
+        return;
+    }
+    
+    try {
+        console.log('Начинаем голосовой звонок...');
+        
+        // Захват аудио
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            },
+            video: false
+        });
+        
+        console.log('Аудио захвачено!');
+        
+        isInCall = true;
+        currentCallType = 'voice';
+        
+        // Показываем видео секцию (без видео, только для интерфейса)
+        videoSection.classList.remove('hidden');
+        callStatus.textContent = `🎤 Звонок ${remoteUsername}...`;
+        localVideo.style.display = 'none'; // Скрываем локальное видео для голосового звонка
+        
+        // Создаем WebRTC соединение
+        createPeerConnection();
+        
+        // Добавляем аудио треки
+        localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+            console.log('Аудио трек добавлен');
+        });
+        
+        // Создаем offer
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        
+        console.log('Offer создан, отправляем...');
+        
+        // Отправляем offer
+        socket.emit('voice-call', {
+            offer: offer,
+            to: remoteUsername,
+            hasVideo: false
+        });
+        
+        console.log('Голосовой звонок начался!');
+        
+    } catch (error) {
+        console.error('Ошибка голосового звонка:', error);
+        alert('Не удалось начать голосовой звонок. Проверьте разрешения на микрофон.');
+        endCall();
+    }
+});
+
 // === ДЕМОНСТРАЦИЯ ЭКРАНА ===
 
-// Начать демонстрацию экрана
 shareScreenBtn.addEventListener('click', async () => {
-    if (!remoteSocketId) {
+    if (!remoteSocketId || !remoteUsername) {
         alert('Выберите пользователя из списка!');
         return;
     }
@@ -231,21 +377,27 @@ shareScreenBtn.addEventListener('click', async () => {
     try {
         console.log('Запуск демонстрации экрана...');
         
-        // Захват экрана с максимальным качеством
+        // Захват экрана с аудио
         localStream = await navigator.mediaDevices.getDisplayMedia({
             video: {
-                width: { ideal: 1920, max: 1920 },
-                height: { ideal: 1080, max: 1080 },
-                frameRate: { ideal: 60, max: 60 },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                frameRate: { ideal: 30 },
                 cursor: 'always'
             },
             audio: true
         });
         
-        console.log('Экран захвачен!', localStream);
+        console.log('Экран захвачен!');
         
-        isSharing = true;
-        screenControlsEl.style.display = 'flex';
+        isInCall = true;
+        currentCallType = 'screen';
+        
+        // Показываем видео секцию
+        videoSection.classList.remove('hidden');
+        callStatus.textContent = `🖥️ Демонстрация экрана для ${remoteUsername}`;
+        localVideo.style.display = 'block';
+        localVideo.srcObject = localStream;
         
         // Создаем WebRTC соединение
         createPeerConnection();
@@ -265,12 +417,12 @@ shareScreenBtn.addEventListener('click', async () => {
         // Отправляем offer
         socket.emit('screen-share', {
             offer: offer,
-            to: remoteSocketId
+            to: remoteUsername
         });
         
         // Отслеживаем остановку демонстрации
         localStream.getVideoTracks()[0].onended = () => {
-            stopSharing();
+            endCall();
         };
         
         console.log('Демонстрация началась!');
@@ -278,18 +430,22 @@ shareScreenBtn.addEventListener('click', async () => {
     } catch (error) {
         console.error('Ошибка демонстрации экрана:', error);
         alert('Не удалось начать демонстрацию экрана. Проверьте разрешения.');
-        isSharing = false;
-        screenControlsEl.style.display = 'none';
+        endCall();
     }
 });
 
-// Остановить демонстрацию
-stopShareBtn.addEventListener('click', () => {
-    socket.emit('stop-screen-share', { to: remoteSocketId });
-    stopSharing();
+// === ЗАВЕРШЕНИЕ ЗВОНКА ===
+
+endCallBtn.addEventListener('click', () => {
+    if (currentCallType === 'screen') {
+        socket.emit('stop-screen-share', { to: remoteSocketId });
+    } else {
+        socket.emit('end-voice-call', { to: remoteSocketId });
+    }
+    endCall();
 });
 
-function stopSharing() {
+function endCall() {
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
         localStream = null;
@@ -300,41 +456,95 @@ function stopSharing() {
         peerConnection = null;
     }
     
-    isSharing = false;
-    screenControlsEl.style.display = 'none';
-    remoteSocketId = null;
+    isInCall = false;
+    currentCallType = null;
+    videoSection.classList.add('hidden');
+    remoteVideo.srcObject = null;
+    localVideo.srcObject = null;
+    localVideo.style.display = 'block';
     
     // Сбрасываем выделение пользователей
     document.querySelectorAll('.user-item').forEach(u => u.classList.remove('selected'));
     
-    console.log('Демонстрация остановлена');
+    console.log('Звонок завершён');
 }
 
-// Получение входящей демонстрации
+// === ВХОДЯЩИЕ ЗВОНКИ ===
+
+// Входящий голосовой звонок
+socket.on('voice-call-incoming', async (data) => {
+    console.log('Входящий звонок от:', data.username);
+    
+    remoteSocketId = data.from;
+    remoteUsername = data.username;
+    callTypeTitle.textContent = data.hasVideo ? '📹 Входящий видеозвонок' : '🎤 Входящий звонок';
+    callCallerNameEl.textContent = `${data.username} (${data.avatar || '😀'}) звонит вам`;
+    incomingCallModal.classList.remove('hidden');
+    
+    window.incomingOffer = data.offer;
+    window.incomingCallType = 'voice';
+    window.incomingHasVideo = data.hasVideo;
+});
+
+// Входящая демонстрация экрана
 socket.on('screen-share-incoming', async (data) => {
     console.log('Входящая демонстрация от:', data.username);
     
     remoteSocketId = data.from;
-    screenCallerNameEl.textContent = `${data.username} (${data.avatar || '😀'}) хочет показать экран`;
-    incomingScreenModal.classList.remove('hidden');
+    remoteUsername = data.username;
+    callTypeTitle.textContent = '🖥️ Входящая демонстрация экрана';
+    callCallerNameEl.textContent = `${data.username} (${data.avatar || '😀'}) хочет показать экран`;
+    incomingCallModal.classList.remove('hidden');
     
     window.incomingOffer = data.offer;
+    window.incomingCallType = 'screen';
 });
 
-// Принять демонстрацию
-acceptScreenBtn.addEventListener('click', async () => {
-    incomingScreenModal.classList.add('hidden');
+// Принять звонок
+acceptCallBtn.addEventListener('click', async () => {
+    incomingCallModal.classList.add('hidden');
     
     try {
-        console.log('Принимаем демонстрацию...');
+        console.log('Принимаем звонок...');
         
-        // Показываем секцию экрана
-        screenSection.classList.remove('hidden');
-        const user = onlineUsers.get(remoteSocketId);
-        screenOwnerEl.textContent = `${user?.avatar || '🖥️'} ${user?.username || 'Пользователь'} показывает экран`;
+        const callType = window.incomingCallType;
+        
+        if (callType === 'voice') {
+            // Для голосового звонка захватываем только аудио
+            localStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                },
+                video: false
+            });
+            
+            localVideo.style.display = 'none';
+        } else {
+            // Для демонстрации экрана аудио не нужно
+            localStream = null;
+            localVideo.style.display = 'none';
+        }
+        
+        // Показываем секцию видео
+        videoSection.classList.remove('hidden');
+        callStatus.textContent = callType === 'voice' 
+            ? `🎤 Звонок с ${remoteUsername}`
+            : `🖥️ ${remoteUsername} показывает экран`;
+        
+        isInCall = true;
+        currentCallType = callType;
         
         // Создаем соединение
         createPeerConnection();
+        
+        // Добавляем локальные треки (если есть)
+        if (localStream) {
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+        }
         
         // Устанавливаем удаленное описание
         await peerConnection.setRemoteDescription(new RTCSessionDescription(window.incomingOffer));
@@ -346,33 +556,59 @@ acceptScreenBtn.addEventListener('click', async () => {
         console.log('Answer создан, отправляем...');
         
         // Отправляем answer
-        socket.emit('screen-share-answer', {
-            answer: answer,
-            to: remoteSocketId
-        });
+        if (callType === 'voice') {
+            socket.emit('voice-call-answer', {
+                answer: answer,
+                to: remoteSocketId
+            });
+        } else {
+            socket.emit('screen-share-answer', {
+                answer: answer,
+                to: remoteSocketId
+            });
+        }
         
-        console.log('Демонстрация принята!');
+        console.log('Звонок принят!');
         
     } catch (error) {
-        console.error('Ошибка при принятии демонстрации:', error);
-        alert('Не удалось принять демонстрацию');
-        screenSection.classList.add('hidden');
+        console.error('Ошибка при принятии звонка:', error);
+        alert('Не удалось принять звонок');
+        endCall();
     }
 });
 
-// Отклонить демонстрацию
-rejectScreenBtn.addEventListener('click', () => {
-    incomingScreenModal.classList.add('hidden');
-    socket.emit('screen-share-rejected', { to: remoteSocketId });
+// Отклонить звонок
+rejectCallBtn.addEventListener('click', () => {
+    incomingCallModal.classList.add('hidden');
+    
+    if (window.incomingCallType === 'voice') {
+        socket.emit('voice-call-rejected', { to: remoteSocketId });
+    } else {
+        socket.emit('screen-share-rejected', { to: remoteSocketId });
+    }
+    
     remoteSocketId = null;
+    remoteUsername = null;
 });
 
 // Получение answer
-socket.on('screen-share-answer', async (data) => {
-    console.log('Получен answer');
+socket.on('voice-call-answer', async (data) => {
+    console.log('Получен voice answer');
     try {
         await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
         console.log('Answer установлен!');
+        callStatus.textContent = `🎤 В звонке с ${remoteUsername}`;
+    } catch (error) {
+        console.error('Ошибка установки answer:', error);
+    }
+});
+
+socket.on('screen-share-answer', async (data) => {
+    console.log('Получен screen answer');
+    try {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+        console.log('Answer установлен!');
+        callStatus.textContent = `🖥️ Демонстрация для ${remoteUsername}`;
     } catch (error) {
         console.error('Ошибка установки answer:', error);
     }
@@ -390,21 +626,19 @@ socket.on('ice-candidate', async (data) => {
     }
 });
 
-// Остановка демонстрации
-socket.on('screen-share-stopped', () => {
-    console.log('Демонстрация остановлена удаленным пользователем');
-    screenSection.classList.add('hidden');
-    remoteScreen.srcObject = null;
-    
-    if (peerConnection) {
-        peerConnection.close();
-        peerConnection = null;
-    }
-    
-    remoteSocketId = null;
+// Завершение звонка
+socket.on('voice-call-ended', () => {
+    console.log('Звонок завершён удалённым пользователем');
+    endCall();
 });
 
-// Создание WebRTC соединения
+socket.on('screen-share-stopped', () => {
+    console.log('Демонстрация остановлена удалённым пользователем');
+    endCall();
+});
+
+// === СОЗДАНИЕ WEBRTC СОЕДИНЕНИЯ ===
+
 function createPeerConnection() {
     peerConnection = new RTCPeerConnection(rtcConfig);
     
@@ -425,8 +659,17 @@ function createPeerConnection() {
     peerConnection.ontrack = (event) => {
         console.log('Получен трек:', event.track.kind);
         if (event.streams && event.streams[0]) {
-            remoteScreen.srcObject = event.streams[0];
-            console.log('Видео поток установлен!');
+            if (event.track.kind === 'video') {
+                remoteVideo.srcObject = event.streams[0];
+                remoteVideo.style.display = 'block';
+                console.log('Видео поток установлен!');
+            } else if (event.track.kind === 'audio') {
+                // Для аудио используем тот же элемент
+                if (!remoteVideo.srcObject) {
+                    remoteVideo.srcObject = event.streams[0];
+                }
+                console.log('Аудио поток установлен!');
+            }
         }
     };
     
@@ -436,11 +679,15 @@ function createPeerConnection() {
         if (peerConnection.connectionState === 'disconnected' || 
             peerConnection.connectionState === 'failed' ||
             peerConnection.connectionState === 'closed') {
-            if (isSharing) {
-                stopSharing();
+            endCall();
+        } else if (peerConnection.connectionState === 'connected') {
+            console.log('Соединение установлено!');
+            if (currentCallType === 'voice') {
+                callStatus.textContent = `🎤 В звонке с ${remoteUsername}`;
             } else {
-                screenSection.classList.add('hidden');
-                remoteScreen.srcObject = null;
+                callStatus.textContent = currentCallType === 'screen' && localStream
+                    ? `🖥️ Демонстрация для ${remoteUsername}`
+                    : `🖥️ ${remoteUsername} показывает экран`;
             }
         }
     };
@@ -452,9 +699,9 @@ function createPeerConnection() {
 
 // Обработка отключения
 window.addEventListener('beforeunload', () => {
-    if (isSharing) {
-        stopSharing();
+    if (isInCall) {
+        endCall();
     }
 });
 
-console.log('Приложение загружено!');
+console.log('Milena загружена!');

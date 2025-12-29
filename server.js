@@ -12,6 +12,8 @@ app.use(express.static('public'));
 const users = new Map(); // socketId -> {username, avatar}
 // Хранилище друзей
 const friends = new Map(); // username -> Set of friend usernames
+// Хранилище приватных сообщений
+const privateMessages = new Map(); // "user1:user2" -> [messages]
 
 io.on('connection', (socket) => {
     console.log('Пользователь подключился:', socket.id);
@@ -33,7 +35,7 @@ io.on('connection', (socket) => {
         io.emit('users-update', usersList);
     });
 
-    // Обработка текстовых сообщений
+    // Обработка текстовых сообщений (общий чат)
     socket.on('chat-message', (data) => {
         const userData = users.get(socket.id);
         if (!userData) return;
@@ -46,6 +48,97 @@ io.on('connection', (socket) => {
         });
     });
 
+    // === ЛИЧНЫЕ ЧАТЫ ===
+
+    // Отправка приватного сообщения
+    socket.on('private-message', (data) => {
+        const userData = users.get(socket.id);
+        if (!userData) return;
+
+        const messageData = {
+            from: userData.username,
+            to: data.to,
+            avatar: userData.avatar,
+            message: data.message,
+            timestamp: new Date().toLocaleTimeString('ru-RU')
+        };
+
+        // Сохраняем сообщение
+        const chatKey = [userData.username, data.to].sort().join(':');
+        if (!privateMessages.has(chatKey)) {
+            privateMessages.set(chatKey, []);
+        }
+        privateMessages.get(chatKey).push(messageData);
+
+        // Отправляем сообщение получателю
+        const recipientSocketId = Array.from(users.entries())
+            .find(([, user]) => user.username === data.to)?.[0];
+        
+        if (recipientSocketId) {
+            io.to(recipientSocketId).emit('private-message', messageData);
+        }
+
+        // Отправляем обратно отправителю
+        socket.emit('private-message', messageData);
+    });
+
+    // Получение истории личного чата
+    socket.on('get-private-messages', (data) => {
+        const userData = users.get(socket.id);
+        if (!userData) return;
+
+        const chatKey = [userData.username, data.username].sort().join(':');
+        const messages = privateMessages.get(chatKey) || [];
+        socket.emit('private-messages-history', { username: data.username, messages });
+    });
+
+    // === ГОЛОСОВОЙ ЧАТ ===
+    
+    // Начало голосового звонка
+    socket.on('voice-call', (data) => {
+        const userData = users.get(socket.id);
+        if (!userData) return;
+        
+        console.log(`${userData.username} звонит ${data.to}`);
+        
+        const recipientSocketId = Array.from(users.entries())
+            .find(([, user]) => user.username === data.to)?.[0];
+        
+        if (recipientSocketId) {
+            io.to(recipientSocketId).emit('voice-call-incoming', {
+                offer: data.offer,
+                from: socket.id,
+                username: userData.username,
+                avatar: userData.avatar,
+                hasVideo: data.hasVideo || false
+            });
+        }
+    });
+
+    // Answer на голосовой звонок
+    socket.on('voice-call-answer', (data) => {
+        console.log('Voice call answer получен');
+        io.to(data.to).emit('voice-call-answer', {
+            answer: data.answer,
+            from: socket.id
+        });
+    });
+
+    // Завершение голосового звонка
+    socket.on('end-voice-call', (data) => {
+        console.log('Завершение голосового звонка');
+        if (data.to) {
+            io.to(data.to).emit('voice-call-ended');
+        }
+    });
+
+    // Отклонение голосового звонка
+    socket.on('voice-call-rejected', (data) => {
+        if (data.to) {
+            io.to(data.to).emit('voice-call-ended');
+        }
+    });
+
     // === ДЕМОНСТРАЦИЯ ЭКРАНА ===
     
     // Начало демонстрации экрана
@@ -55,17 +148,22 @@ io.on('connection', (socket) => {
         
         console.log(`${userData.username} начал демонстрацию для ${data.to}`);
         
-        io.to(data.to).emit('screen-share-incoming', {
-            offer: data.offer,
-            from: socket.id,
-            username: userData.username,
-            avatar: userData.avatar
-        });
+        const recipientSocketId = Array.from(users.entries())
+            .find(([, user]) => user.username === data.to)?.[0];
+        
+        if (recipientSocketId) {
+            io.to(recipientSocketId).emit('screen-share-incoming', {
+                offer: data.offer,
+                from: socket.id,
+                username: userData.username,
+                avatar: userData.avatar
+            });
+        }
     });
 
     // Answer на демонстрацию
     socket.on('screen-share-answer', (data) => {
-        console.log('Answer получен, отправляем обратно');
+        console.log('Screen share answer получен');
         io.to(data.to).emit('screen-share-answer', {
             answer: data.answer,
             from: socket.id
@@ -87,7 +185,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ICE кандидаты
+    // ICE кандидаты (для всех WebRTC соединений)
     socket.on('ice-candidate', (data) => {
         if (data.to) {
             io.to(data.to).emit('ice-candidate', {
@@ -182,6 +280,6 @@ io.on('connection', (socket) => {
 });
 
 http.listen(PORT, () => {
-    console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
+    console.log(`🚀 Milena сервер запущен на http://localhost:${PORT}`);
     console.log(`📱 Откройте браузер и перейдите по адресу`);
 });

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Clone - Демонстрация экрана</title>
+    <title>Milena - Видеозвонки и Чат</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,8 +11,8 @@
         <!-- Экран входа -->
         <div id="login-screen" class="screen active">
             <div class="login-box">
-                <h1>💬 Discord Clone</h1>
-                <p>Демонстрация экрана и чат</p>
+                <h1>💜 Milena</h1>
+                <p>Видеозвонки, голосовой чат и общение</p>
                 
                 <div class="avatar-selector">
                     <p>Выбери аватарку:</p>
@@ -44,7 +44,7 @@
         <div id="main-screen" class="screen">
             <div class="sidebar">
                 <div class="sidebar-header">
-                    <h2>💬 Discord Clone</h2>
+                    <h2>💜 Milena</h2>
                     <div class="user-info">
                         <span id="user-avatar" class="user-avatar-icon">😀</span>
                         <span id="current-username"></span>
@@ -61,7 +61,10 @@
                     <div id="users-list" class="users-list"></div>
                 </div>
 
-                <div class="screen-share-controls">
+                <div class="action-controls">
+                    <button id="voice-call-btn" class="btn-voice" disabled>
+                        🎤 Голосовой звонок
+                    </button>
                     <button id="share-screen-btn" class="btn-screen-share" disabled>
                         🖥️ Демонстрация экрана
                     </button>
@@ -69,21 +72,23 @@
             </div>
 
             <div class="main-content">
-                <!-- Демонстрация экрана -->
-                <div id="screen-section" class="screen-display hidden">
-                    <div class="screen-header">
-                        <span id="screen-owner">Экран пользователя</span>
+                <!-- Видео секция (голосовой чат и демонстрация) -->
+                <div id="video-section" class="video-display hidden">
+                    <div class="video-header">
+                        <span id="call-status">Звонок...</span>
+                        <button id="end-call-btn" class="btn-end-call">📵 Завершить</button>
                     </div>
-                    <video id="remote-screen" autoplay playsinline></video>
-                    <div class="screen-controls" id="screen-controls" style="display: none;">
-                        <button id="stop-share-btn" class="btn-stop">📵 Остановить демонстрацию</button>
+                    <div class="video-container">
+                        <video id="remote-video" autoplay playsinline></video>
+                        <video id="local-video" autoplay playsinline muted></video>
                     </div>
                 </div>
 
                 <!-- Чат секция -->
                 <div class="chat-section">
                     <div class="chat-header">
-                        <h3>💬 Общий чат</h3>
+                        <h3 id="chat-title">💬 Общий чат</h3>
+                        <button id="back-to-general-btn" class="btn-back hidden">← Общий чат</button>
                     </div>
                     <div id="messages" class="messages"></div>
                     <div class="message-input">
@@ -94,14 +99,14 @@
             </div>
         </div>
 
-        <!-- Модальное окно входящей демонстрации -->
-        <div id="incoming-screen-modal" class="modal hidden">
+        <!-- Модальное окно входящего звонка -->
+        <div id="incoming-call-modal" class="modal hidden">
             <div class="modal-content">
-                <h2>🖥️ Входящая демонстрация экрана</h2>
-                <p id="screen-caller-name"></p>
+                <h2 id="call-type-title">🎤 Входящий звонок</h2>
+                <p id="call-caller-name"></p>
                 <div class="modal-buttons">
-                    <button id="accept-screen-btn" class="btn-success">✅ Смотреть</button>
-                    <button id="reject-screen-btn" class="btn-danger">❌ Отклонить</button>
+                    <button id="accept-call-btn" class="btn-success">✅ Принять</button>
+                    <button id="reject-call-btn" class="btn-danger">❌ Отклонить</button>
                 </div>
             </div>
         </div>

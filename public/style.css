@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #36393f;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     height: 100vh;
     overflow: hidden;
     color: #dcddde;
@@ -38,13 +38,15 @@ body {
 }
 
 .login-box {
-    background: #2f3136;
+    background: rgba(47, 49, 54, 0.95);
     padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     text-align: center;
     min-width: 450px;
     animation: fadeIn 0.5s ease-in;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @keyframes fadeIn {
@@ -62,6 +64,7 @@ body {
     color: #fff;
     font-size: 2.5em;
     margin-bottom: 10px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .login-box p {
@@ -90,7 +93,7 @@ body {
 .avatar-option {
     font-size: 2em;
     padding: 10px;
-    background: #40444b;
+    background: rgba(64, 68, 75, 0.8);
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s;
@@ -98,20 +101,21 @@ body {
 }
 
 .avatar-option:hover {
-    background: #4f545c;
+    background: rgba(79, 84, 92, 0.9);
     transform: scale(1.1);
 }
 
 .avatar-option.selected {
-    background: #5865f2;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-color: #fff;
     transform: scale(1.15);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.5);
 }
 
 .selected-avatar {
     margin-top: 15px;
     padding: 15px;
-    background: #40444b;
+    background: rgba(64, 68, 75, 0.8);
     border-radius: 10px;
 }
 
@@ -123,17 +127,18 @@ body {
     width: 100%;
     padding: 15px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 16px;
     margin: 20px 0;
-    background: #40444b;
+    background: rgba(64, 68, 75, 0.8);
     color: #fff;
     transition: all 0.3s;
 }
 
 .login-box input:focus {
     outline: none;
-    background: #4f545c;
+    background: rgba(79, 84, 92, 0.9);
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.5);
 }
 
 .login-box input::placeholder {
@@ -144,10 +149,10 @@ body {
 .btn-primary {
     width: 100%;
     padding: 15px;
-    background: #5865f2;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 18px;
     font-weight: 600;
     cursor: pointer;
@@ -155,9 +160,8 @@ body {
 }
 
 .btn-primary:hover {
-    background: #4752c4;
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(88, 101, 242, 0.4);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
 }
 
 .btn-primary:active {
@@ -172,31 +176,32 @@ body {
 /* Сайдбар */
 .sidebar {
     width: 300px;
-    background: #2f3136;
+    background: linear-gradient(180deg, #2f3136 0%, #202225 100%);
     display: flex;
     flex-direction: column;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar-header {
     padding: 20px;
-    background: #202225;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border-bottom: 1px solid #202225;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-header h2 {
-    font-size: 1.3em;
-    margin-bottom: 12px;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 .user-info {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px;
-    background: #292b2f;
-    border-radius: 8px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
 }
 
 .user-avatar-icon {
@@ -205,7 +210,8 @@ body {
 
 .user-info span {
     font-size: 0.95em;
-    color: #b9bbbe;
+    color: #fff;
+    font-weight: 500;
 }
 
 /* Друзья и пользователи */
@@ -232,6 +238,7 @@ body {
     text-transform: uppercase;
     margin-bottom: 10px;
     letter-spacing: 0.5px;
+    font-weight: 600;
 }
 
 .users-list {
@@ -248,35 +255,38 @@ body {
 }
 
 .user-item {
-    padding: 8px 10px;
-    background: #36393f;
-    border-radius: 6px;
+    padding: 10px;
+    background: rgba(54, 57, 63, 0.5);
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
     transition: all 0.2s;
+    border: 2px solid transparent;
 }
 
 .user-item:hover {
-    background: #3c3f45;
+    background: rgba(79, 84, 92, 0.5);
+    transform: translateX(5px);
 }
 
 .user-item.selected {
-    background: #5865f2;
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+    border-color: #667eea;
 }
 
 .user-item.friend {
-    background: #2d7d46;
+    background: rgba(67, 181, 129, 0.15);
 }
 
 .user-item.friend:hover {
-    background: #3c8f58;
+    background: rgba(67, 181, 129, 0.25);
 }
 
 .user-item.friend.selected {
-    background: #2d7d46;
-    box-shadow: 0 0 0 2px #43b581;
+    background: rgba(67, 181, 129, 0.3);
+    border-color: #43b581;
 }
 
 .user-info-inline {
@@ -297,19 +307,21 @@ body {
 }
 
 .friend-btn {
-    padding: 4px 10px;
+    padding: 5px 12px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 1em;
     cursor: pointer;
     background: #43b581;
     color: white;
     transition: all 0.2s;
-    min-width: 28px;
+    min-width: 30px;
+    font-weight: bold;
 }
 
 .friend-btn:hover {
     background: #3ca374;
+    transform: scale(1.1);
 }
 
 .friend-btn.remove {
@@ -320,34 +332,67 @@ body {
     background: #c03537;
 }
 
-/* Кнопка демонстрации экрана */
-.screen-share-controls {
-    padding: 15px;
-    border-top: 1px solid #202225;
+.chat-btn {
+    padding: 5px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9em;
+    cursor: pointer;
+    background: #5865f2;
+    color: white;
+    transition: all 0.2s;
+    margin-left: 5px;
 }
 
+.chat-btn:hover {
+    background: #4752c4;
+}
+
+/* Кнопки действий */
+.action-controls {
+    padding: 15px;
+    border-top: 1px solid #202225;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-voice,
 .btn-screen-share {
     width: 100%;
     padding: 12px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    border-radius: 6px;
-    font-size: 15px;
+    border-radius: 8px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
 }
 
-.btn-screen-share:disabled {
-    background: #4f545c;
-    cursor: not-allowed;
-    opacity: 0.5;
+.btn-voice {
+    background: linear-gradient(135deg, #43b581 0%, #3ca374 100%);
+}
+
+.btn-voice:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(67, 181, 129, 0.5);
+}
+
+.btn-screen-share {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .btn-screen-share:not(:disabled):hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.5);
+}
+
+.btn-voice:disabled,
+.btn-screen-share:disabled {
+    background: #4f545c;
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 /* === ОСНОВНОЙ КОНТЕНТ === */
@@ -358,63 +403,72 @@ body {
     background: #36393f;
 }
 
-/* Демонстрация экрана */
-.screen-display {
-    flex: 1;
+/* Видео секция */
+.video-display {
+    flex: 0.6;
     background: #000;
     position: relative;
     display: flex;
     flex-direction: column;
+    min-height: 300px;
 }
 
-.screen-display.hidden {
+.video-display.hidden {
     display: none;
 }
 
-.screen-header {
+.video-header {
     padding: 15px 20px;
     background: rgba(0, 0, 0, 0.8);
     color: #fff;
     font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 10px;
-    border-bottom: 2px solid #5865f2;
-}
-
-#remote-screen {
-    flex: 1;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.screen-controls {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 15px;
-    padding: 15px 25px;
-    background: rgba(0, 0, 0, 0.8);
-    border-radius: 30px;
+    justify-content: space-between;
+    border-bottom: 2px solid #667eea;
     backdrop-filter: blur(10px);
 }
 
-.btn-stop {
-    padding: 12px 25px;
+.video-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+
+#local-video {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    height: 150px;
+    border-radius: 10px;
+    border: 2px solid #667eea;
+    object-fit: cover;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.btn-end-call {
+    padding: 10px 20px;
     background: #ed4245;
     color: white;
     border: none;
-    border-radius: 20px;
-    font-size: 15px;
+    border-radius: 8px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
 }
 
-.btn-stop:hover {
+.btn-end-call:hover {
     background: #c03537;
     transform: scale(1.05);
 }
@@ -423,12 +477,12 @@ body {
 .chat-section {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
     background: #36393f;
+    min-height: 350px;
 }
 
-.screen-display:not(.hidden) ~ .chat-section {
-    height: 350px;
+.video-display:not(.hidden) ~ .chat-section {
     border-top: 2px solid #202225;
 }
 
@@ -436,11 +490,33 @@ body {
     padding: 15px 20px;
     background: #2f3136;
     border-bottom: 1px solid #202225;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .chat-header h3 {
     color: #fff;
     font-size: 1.1em;
+}
+
+.btn-back {
+    padding: 8px 15px;
+    background: #4f545c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-back:hover {
+    background: #5865f2;
+}
+
+.btn-back.hidden {
+    display: none;
 }
 
 .messages {
@@ -453,11 +529,17 @@ body {
 }
 
 .message {
-    padding: 10px 15px;
+    padding: 12px 15px;
     background: #2f3136;
-    border-radius: 8px;
-    border-left: 3px solid #5865f2;
+    border-radius: 10px;
+    border-left: 3px solid #667eea;
     animation: messageSlide 0.3s ease-in;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.message.private {
+    border-left-color: #43b581;
+    background: rgba(67, 181, 129, 0.1);
 }
 
 @keyframes messageSlide {
@@ -485,7 +567,7 @@ body {
 
 .message-username {
     font-weight: 600;
-    color: #5865f2;
+    color: #667eea;
 }
 
 .message-time {
@@ -497,7 +579,7 @@ body {
 .message-text {
     color: #dcddde;
     word-wrap: break-word;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 
 .message-input {
@@ -512,7 +594,7 @@ body {
     flex: 1;
     padding: 12px 18px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 15px;
     background: #40444b;
     color: #dcddde;
@@ -522,6 +604,7 @@ body {
 .message-input input:focus {
     outline: none;
     background: #4f545c;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
 }
 
 .message-input input::placeholder {
@@ -530,18 +613,18 @@ body {
 
 .btn-send {
     padding: 12px 25px;
-    background: #5865f2;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
 }
 
 .btn-send:hover {
-    background: #4752c4;
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.5);
 }
 
 /* === МОДАЛЬНОЕ ОКНО === */
@@ -566,11 +649,12 @@ body {
 .modal-content {
     background: #2f3136;
     padding: 35px;
-    border-radius: 12px;
+    border-radius: 15px;
     text-align: center;
     min-width: 400px;
     animation: fadeIn 0.3s ease-in;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-content h2 {
@@ -593,10 +677,10 @@ body {
 .btn-success {
     flex: 1;
     padding: 14px;
-    background: #43b581;
+    background: linear-gradient(135deg, #43b581 0%, #3ca374 100%);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -604,17 +688,17 @@ body {
 }
 
 .btn-success:hover {
-    background: #3ca374;
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(67, 181, 129, 0.5);
 }
 
 .btn-danger {
     flex: 1;
     padding: 14px;
-    background: #ed4245;
+    background: linear-gradient(135deg, #ed4245 0%, #c03537 100%);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -622,8 +706,8 @@ body {
 }
 
 .btn-danger:hover {
-    background: #c03537;
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(237, 66, 69, 0.5);
 }
 
 /* Скроллбар */
@@ -636,12 +720,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #202225;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
     border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #18191c;
+    background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
 }
 
 /* Адаптивность */
@@ -661,5 +745,12 @@ body {
 
     .modal-content {
         min-width: 90%;
+    }
+
+    #local-video {
+        width: 120px;
+        height: 90px;
+        bottom: 10px;
+        right: 10px;
     }
 }

@@ -1,7 +1,7 @@
 {
-  "name": "simple-chat-app",
+  "name": "milena",
   "version": "1.0.0",
-  "description": "Минималистичное приложение для видеозвонков и чата",
+  "description": "Milena - приложение для видеозвонков и чата",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
