@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat - Видеозвонки и Чат</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Экран входа -->
+        <div id="login-screen" class="screen active">
+            <div class="login-box">
+                <h1>🎮 Simple Chat</h1>
+                <p>Минималистичный мессенджер для общения</p>
+                <input type="text" id="username-input" placeholder="Введите ваше имя" maxlength="20">
+                <button id="join-btn" class="btn-primary">Войти</button>
+            </div>
+        </div>
+
+        <!-- Главный экран -->
+        <div id="main-screen" class="screen">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Simple Chat</h2>
+                    <div class="user-info">
+                        <span id="current-username"></span>
+                    </div>
+                </div>
+                
+                <div class="friends-section">
+                    <h3>👥 Друзья (<span id="friends-count">0</span>)</h3>
+                    <div id="friends-list" class="users-list"></div>
+                </div>
+
+                <div class="online-users">
+                    <h3>🌐 Все онлайн (<span id="users-count">0</span>)</h3>
+                    <div id="users-list" class="users-list"></div>
+                </div>
+
+                <div class="call-controls">
+                    <button id="start-call-btn" class="btn-call" disabled>
+                        📹 Видеозвонок
+                    </button>
+                    <button id="start-audio-btn" class="btn-call" disabled>
+                        🎤 Аудиозвонок
+                    </button>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <!-- Видео секция -->
+                <div id="video-section" class="video-section hidden">
+                    <div class="video-container">
+                        <video id="remote-video" autoplay playsinline></video>
+                        <video id="local-video" autoplay playsinline muted></video>
+                        <div class="video-controls">
+                            <button id="toggle-video-btn" class="control-btn">📹</button>
+                            <button id="toggle-audio-btn" class="control-btn">🎤</button>
+                            <button id="end-call-btn" class="control-btn end-call">📵 Завершить</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Чат секция -->
+                <div class="chat-section">
+                    <div class="chat-header">
+                        <h3>💬 Общий чат</h3>
+                    </div>
+                    <div id="messages" class="messages"></div>
+                    <div class="message-input">
+                        <input type="text" id="message-input" placeholder="Напишите сообщение..." maxlength="500">
+                        <button id="send-btn" class="btn-send">Отправить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно входящего звонка -->
+        <div id="incoming-call-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>📞 Входящий звонок</h2>
+                <p id="caller-name"></p>
+                <div class="modal-buttons">
+                    <button id="accept-call-btn" class="btn-success">✅ Принять</button>
+                    <button id="reject-call-btn" class="btn-danger">❌ Отклонить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,18 @@
+{
+  "name": "simple-chat-app",
+  "version": "1.0.0",
+  "description": "Минималистичное приложение для видеозвонков и чата",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["chat", "video", "webrtc", "socket.io"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1"
+  }
+}
+
