@@ -45,10 +45,28 @@
             <div class="sidebar">
                 <div class="sidebar-header">
                     <h2>💜 Milena</h2>
-                    <div class="user-info">
+                    <div class="user-info" id="user-info-bar">
                         <span id="user-avatar" class="user-avatar-icon">😀</span>
                         <span id="current-username"></span>
+                        <button id="settings-btn" class="icon-btn" title="Настройки">⚙️</button>
                     </div>
+                </div>
+
+                <!-- Уведомления -->
+                <div class="notifications-bar hidden" id="notifications-bar">
+                    <div class="notifications-header">
+                        <span>🔔 Уведомления</span>
+                        <button id="close-notifications-btn" class="icon-btn">✕</button>
+                    </div>
+                    <div id="notifications-list" class="notifications-list"></div>
+                </div>
+
+                <!-- Запросы в друзья -->
+                <div class="friend-requests-section" id="friend-requests-section">
+                    <div class="section-header">
+                        <h3>📨 Запросы в друзья (<span id="requests-count">0</span>)</h3>
+                    </div>
+                    <div id="friend-requests-list" class="requests-list"></div>
                 </div>
                 
                 <div class="friends-section">
@@ -88,7 +106,12 @@
                 <div class="chat-section">
                     <div class="chat-header">
                         <h3 id="chat-title">💬 Общий чат</h3>
-                        <button id="back-to-general-btn" class="btn-back hidden">← Общий чат</button>
+                        <div class="chat-actions">
+                            <button id="back-to-general-btn" class="btn-back hidden">← Общий чат</button>
+                            <button id="notifications-btn" class="icon-btn">
+                                🔔 <span id="notification-badge" class="badge hidden">0</span>
+                            </button>
+                        </div>
                     </div>
                     <div id="messages" class="messages"></div>
                     <div class="message-input">
@@ -107,6 +130,71 @@
                 <div class="modal-buttons">
                     <button id="accept-call-btn" class="btn-success">✅ Принять</button>
                     <button id="reject-call-btn" class="btn-danger">❌ Отклонить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно профиля -->
+        <div id="profile-modal" class="modal hidden">
+            <div class="modal-content profile-modal">
+                <div class="profile-header">
+                    <span id="profile-avatar" class="profile-avatar-big">😀</span>
+                    <h2 id="profile-username">Username</h2>
+                    <button class="close-modal-btn" id="close-profile-btn">✕</button>
+                </div>
+                <div class="profile-body">
+                    <div class="profile-status">
+                        <strong>Статус:</strong>
+                        <p id="profile-status-text">Привет! Я использую Milena 💜</p>
+                    </div>
+                    <div class="profile-bio" id="profile-bio-section">
+                        <strong>О себе:</strong>
+                        <p id="profile-bio-text"></p>
+                    </div>
+                    <div class="profile-actions" id="profile-actions">
+                        <!-- Кнопки будут добавлены динамически -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно настроек профиля -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content settings-modal">
+                <div class="settings-header">
+                    <h2>⚙️ Настройки профиля</h2>
+                    <button class="close-modal-btn" id="close-settings-btn">✕</button>
+                </div>
+                <div class="settings-body">
+                    <div class="setting-group">
+                        <label>Аватарка:</label>
+                        <div class="avatar-grid-small">
+                            <div class="avatar-option-small" data-avatar="😀">😀</div>
+                            <div class="avatar-option-small" data-avatar="😎">😎</div>
+                            <div class="avatar-option-small" data-avatar="🤖">🤖</div>
+                            <div class="avatar-option-small" data-avatar="👾">👾</div>
+                            <div class="avatar-option-small" data-avatar="🦄">🦄</div>
+                            <div class="avatar-option-small" data-avatar="🐱">🐱</div>
+                            <div class="avatar-option-small" data-avatar="🐶">🐶</div>
+                            <div class="avatar-option-small" data-avatar="🦊">🦊</div>
+                            <div class="avatar-option-small" data-avatar="🐼">🐼</div>
+                            <div class="avatar-option-small" data-avatar="🐨">🐨</div>
+                            <div class="avatar-option-small" data-avatar="🦁">🦁</div>
+                            <div class="avatar-option-small" data-avatar="🐯">🐯</div>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label>Статус:</label>
+                        <input type="text" id="status-input" placeholder="Ваш статус" maxlength="100">
+                    </div>
+                    <div class="setting-group">
+                        <label>О себе:</label>
+                        <textarea id="bio-input" placeholder="Расскажите о себе" maxlength="200" rows="3"></textarea>
+                    </div>
+                    <div class="setting-actions">
+                        <button id="save-settings-btn" class="btn-primary">💾 Сохранить</button>
+                        <button id="logout-btn" class="btn-danger">🚪 Выйти</button>
+                    </div>
                 </div>
             </div>
         </div>

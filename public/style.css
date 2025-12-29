@@ -168,6 +168,22 @@ body {
     transform: translateY(0);
 }
 
+.icon-btn {
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1em;
+    position: relative;
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
 /* === ГЛАВНЫЙ ЭКРАН === */
 #main-screen {
     background: #36393f;
@@ -180,6 +196,7 @@ body {
     display: flex;
     flex-direction: column;
     box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
 }
 
 .sidebar-header {
@@ -202,16 +219,177 @@ body {
     padding: 12px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.user-info:hover {
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .user-avatar-icon {
     font-size: 1.8em;
 }
 
-.user-info span {
+.user-info span:not(.icon-btn) {
     font-size: 0.95em;
     color: #fff;
     font-weight: 500;
+    flex: 1;
+}
+
+/* Уведомления */
+.notifications-bar {
+    background: #2f3136;
+    border-bottom: 1px solid #202225;
+    max-height: 250px;
+    display: flex;
+    flex-direction: column;
+}
+
+.notifications-bar.hidden {
+    display: none;
+}
+
+.notifications-header {
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #202225;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #dcddde;
+}
+
+.notifications-list {
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.notification-item {
+    padding: 10px;
+    margin-bottom: 8px;
+    background: rgba(67, 181, 129, 0.1);
+    border-left: 3px solid #43b581;
+    border-radius: 6px;
+    font-size: 0.85em;
+    animation: slideIn 0.3s ease-in;
+}
+
+.notification-item.message {
+    border-left-color: #5865f2;
+    background: rgba(88, 101, 242, 0.1);
+}
+
+.notification-item.friend-request {
+    border-left-color: #faa61a;
+    background: rgba(250, 166, 26, 0.1);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.badge {
+    background: #ed4245;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.badge.hidden {
+    display: none;
+}
+
+/* Запросы в друзья */
+.friend-requests-section {
+    padding: 15px;
+    border-bottom: 1px solid #202225;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.section-header h3 {
+    color: #8e9297;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.request-item {
+    padding: 10px;
+    background: rgba(250, 166, 26, 0.15);
+    border-radius: 8px;
+    border-left: 3px solid #faa61a;
+}
+
+.request-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.request-avatar {
+    font-size: 1.3em;
+}
+
+.request-username {
+    font-weight: 600;
+    color: #dcddde;
+    flex: 1;
+}
+
+.request-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-accept, .btn-decline {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+}
+
+.btn-accept {
+    background: #43b581;
+    color: white;
+}
+
+.btn-accept:hover {
+    background: #3ca374;
+}
+
+.btn-decline {
+    background: #ed4245;
+    color: white;
+}
+
+.btn-decline:hover {
+    background: #c03537;
 }
 
 /* Друзья и пользователи */
@@ -223,7 +401,7 @@ body {
 
 .friends-section {
     border-bottom: 1px solid #202225;
-    max-height: 250px;
+    max-height: 200px;
     flex-shrink: 0;
 }
 
@@ -298,6 +476,12 @@ body {
 
 .user-avatar-small {
     font-size: 1.5em;
+    cursor: pointer;
+}
+
+.user-avatar-small:hover {
+    transform: scale(1.2);
+    transition: transform 0.2s;
 }
 
 .user-name-text {
@@ -330,6 +514,14 @@ body {
 
 .friend-btn.remove:hover {
     background: #c03537;
+}
+
+.friend-btn.pending {
+    background: #faa61a;
+}
+
+.friend-btn.pending:hover {
+    background: #e89505;
 }
 
 .chat-btn {
@@ -500,6 +692,12 @@ body {
     font-size: 1.1em;
 }
 
+.chat-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
 .btn-back {
     padding: 8px 15px;
     background: #4f545c;
@@ -627,7 +825,7 @@ body {
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.5);
 }
 
-/* === МОДАЛЬНОЕ ОКНО === */
+/* === МОДАЛЬНЫЕ ОКНА === */
 .modal {
     position: fixed;
     top: 0;
@@ -652,9 +850,11 @@ body {
     border-radius: 15px;
     text-align: center;
     min-width: 400px;
+    max-width: 500px;
     animation: fadeIn 0.3s ease-in;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
 }
 
 .modal-content h2 {
@@ -710,6 +910,191 @@ body {
     box-shadow: 0 5px 15px rgba(237, 66, 69, 0.5);
 }
 
+.close-modal-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px 12px;
+    border-radius: 6px;
+    transition: all 0.3s;
+}
+
+.close-modal-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* === ПРОФИЛЬ === */
+.profile-modal {
+    text-align: left;
+    max-width: 500px;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #40444b;
+}
+
+.profile-avatar-big {
+    font-size: 5em;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.profile-body {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.profile-status,
+.profile-bio {
+    padding: 15px;
+    background: #40444b;
+    border-radius: 10px;
+}
+
+.profile-status strong,
+.profile-bio strong {
+    display: block;
+    color: #8e9297;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.profile-status p,
+.profile-bio p {
+    color: #dcddde;
+    margin: 0;
+    font-size: 1em;
+    line-height: 1.5;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.profile-actions button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+/* === НАСТРОЙКИ === */
+.settings-modal {
+    max-width: 550px;
+}
+
+.settings-header {
+    text-align: left;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #40444b;
+}
+
+.settings-body {
+    text-align: left;
+}
+
+.setting-group {
+    margin-bottom: 20px;
+}
+
+.setting-group label {
+    display: block;
+    color: #8e9297;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.setting-group input,
+.setting-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #40444b;
+    color: #dcddde;
+    font-family: inherit;
+    font-size: 15px;
+    transition: all 0.3s;
+}
+
+.setting-group input:focus,
+.setting-group textarea:focus {
+    outline: none;
+    background: #4f545c;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+}
+
+.setting-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.avatar-grid-small {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.avatar-option-small {
+    font-size: 1.5em;
+    padding: 8px;
+    background: #40444b;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+    text-align: center;
+}
+
+.avatar-option-small:hover {
+    background: #4f545c;
+    transform: scale(1.1);
+}
+
+.avatar-option-small.selected {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #fff;
+    transform: scale(1.15);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.5);
+}
+
+.setting-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.setting-actions button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 15px;
+}
+
 /* Скроллбар */
 ::-webkit-scrollbar {
     width: 10px;
@@ -745,6 +1130,7 @@ body {
 
     .modal-content {
         min-width: 90%;
+        max-width: 90%;
     }
 
     #local-video {
@@ -753,4 +1139,9 @@ body {
         bottom: 10px;
         right: 10px;
     }
+}
+
+/* Утилиты */
+.hidden {
+    display: none !important;
 }

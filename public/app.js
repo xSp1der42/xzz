@@ -17,6 +17,18 @@ const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
 const messagesEl = document.getElementById('messages');
 
+// Уведомления
+const notificationsBtn = document.getElementById('notifications-btn');
+const notificationBadge = document.getElementById('notification-badge');
+const notificationsBar = document.getElementById('notifications-bar');
+const closeNotificationsBtn = document.getElementById('close-notifications-btn');
+const notificationsList = document.getElementById('notifications-list');
+
+// Запросы в друзья
+const friendRequestsSection = document.getElementById('friend-requests-section');
+const requestsCountEl = document.getElementById('requests-count');
+const friendRequestsList = document.getElementById('friend-requests-list');
+
 // Кнопки звонков
 const voiceCallBtn = document.getElementById('voice-call-btn');
 const shareScreenBtn = document.getElementById('share-screen-btn');
@@ -32,16 +44,35 @@ const localVideo = document.getElementById('local-video');
 const chatTitle = document.getElementById('chat-title');
 const backToGeneralBtn = document.getElementById('back-to-general-btn');
 
-// Модальное окно
+// Модальное окно звонка
 const incomingCallModal = document.getElementById('incoming-call-modal');
 const callTypeTitle = document.getElementById('call-type-title');
 const callCallerNameEl = document.getElementById('call-caller-name');
 const acceptCallBtn = document.getElementById('accept-call-btn');
 const rejectCallBtn = document.getElementById('reject-call-btn');
 
+// Модальное окно профиля
+const profileModal = document.getElementById('profile-modal');
+const profileAvatar = document.getElementById('profile-avatar');
+const profileUsername = document.getElementById('profile-username');
+const profileStatusText = document.getElementById('profile-status-text');
+const profileBioText = document.getElementById('profile-bio-text');
+const profileActions = document.getElementById('profile-actions');
+const closeProfileBtn = document.getElementById('close-profile-btn');
+
+// Модальное окно настроек
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const closeSettingsBtn = document.getElementById('close-settings-btn');
+const statusInput = document.getElementById('status-input');
+const bioInput = document.getElementById('bio-input');
+const saveSettingsBtn = document.getElementById('save-settings-btn');
+const logoutBtn = document.getElementById('logout-btn');
+
 // Переменные
 let currentUsername = '';
 let currentAvatar = '😀';
+let currentProfile = null;
 let localStream = null;
 let peerConnection = null;
 let remoteSocketId = null;
@@ -49,7 +80,11 @@ let remoteUsername = null;
 let isInCall = false;
 let currentCallType = null; // 'voice', 'screen'
 let friendsList = new Set();
+let friendRequests = [];
+let pendingRequests = new Set(); // Отправленные запросы
 let currentChatUser = null; // null = общий чат
+let notifications = [];
+let sentRequestsMap = new Map(); // Храним отправленные запросы
 
 // Конфигурация WebRTC
 const rtcConfig = {
@@ -60,6 +95,38 @@ const rtcConfig = {
         { urls: 'stun:stun.services.mozilla.com' }
     ]
 };
+
+// === СОХРАНЕНИЕ И ЗАГРУЗКА СЕССИИ ===
+
+function saveSession() {
+    const session = {
+        username: currentUsername,
+        avatar: currentAvatar,
+        timestamp: Date.now()
+    };
+    localStorage.setItem('milena_session', JSON.stringify(session));
+}
+
+function loadSession() {
+    const sessionData = localStorage.getItem('milena_session');
+    if (sessionData) {
+        try {
+            const session = JSON.parse(sessionData);
+            // Проверяем, что сессия не старше 7 дней
+            const daysPassed = (Date.now() - session.timestamp) / (1000 * 60 * 60 * 24);
+            if (daysPassed < 7) {
+                return session;
+            }
+        } catch (e) {
+            console.error('Ошибка загрузки сессии:', e);
+        }
+    }
+    return null;
+}
+
+function clearSession() {
+    localStorage.removeItem('milena_session');
+}
 
 // === ВЫБОР АВАТАРКИ ===
 document.querySelectorAll('.avatar-option').forEach(option => {
@@ -75,6 +142,28 @@ document.querySelectorAll('.avatar-option').forEach(option => {
 document.querySelector('.avatar-option').classList.add('selected');
 
 // === ВХОД В ПРИЛОЖЕНИЕ ===
+
+// Проверяем сохранённую сессию при загрузке
+window.addEventListener('DOMContentLoaded', () => {
+    const session = loadSession();
+    if (session) {
+        // Автоматически входим
+        currentUsername = session.username;
+        currentAvatar = session.avatar;
+        
+        // Обновляем UI
+        usernameInput.value = session.username;
+        document.querySelectorAll('.avatar-option').forEach(opt => {
+            if (opt.dataset.avatar === session.avatar) {
+                opt.classList.add('selected');
+                previewAvatarEl.textContent = session.avatar;
+            }
+        });
+        
+        joinChat();
+    }
+});
+
 joinBtn.addEventListener('click', joinChat);
 usernameInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') joinChat();
@@ -89,13 +178,270 @@ function joinChat() {
         
         socket.emit('register', { username, avatar: currentAvatar });
         
+        // Сохраняем сессию
+        saveSession();
+        
         loginScreen.classList.remove('active');
         mainScreen.classList.add('active');
-        
-        // Запрашиваем список друзей
-        socket.emit('get-friends');
     }
 }
+
+// Получение данных профиля
+socket.on('profile-data', (profile) => {
+    currentProfile = profile;
+    
+    // Обновляем интерфейс, если это наш профиль
+    if (profile.username === currentUsername) {
+        currentAvatar = profile.avatar;
+        userAvatarEl.textContent = profile.avatar;
+        
+        // Обновляем поля настроек
+        if (statusInput) statusInput.value = profile.status || '';
+        if (bioInput) bioInput.value = profile.bio || '';
+        
+        // Обновляем выбранную аватарку в настройках
+        document.querySelectorAll('.avatar-option-small').forEach(opt => {
+            opt.classList.remove('selected');
+            if (opt.dataset.avatar === profile.avatar) {
+                opt.classList.add('selected');
+            }
+        });
+    }
+});
+
+// Обновление профиля
+socket.on('profile-updated', (profile) => {
+    currentProfile = profile;
+    showNotification('success', 'Профиль обновлён! ✅');
+});
+
+// === НАСТРОЙКИ ПРОФИЛЯ ===
+
+settingsBtn.addEventListener('click', () => {
+    settingsModal.classList.remove('hidden');
+});
+
+closeSettingsBtn.addEventListener('click', () => {
+    settingsModal.classList.add('hidden');
+});
+
+// Выбор аватарки в настройках
+document.querySelectorAll('.avatar-option-small').forEach(option => {
+    option.addEventListener('click', () => {
+        document.querySelectorAll('.avatar-option-small').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        currentAvatar = option.dataset.avatar;
+    });
+});
+
+saveSettingsBtn.addEventListener('click', () => {
+    const status = statusInput.value.trim();
+    const bio = bioInput.value.trim();
+    
+    socket.emit('update-profile', {
+        avatar: currentAvatar,
+        status: status || 'Привет! Я использую Milena 💜',
+        bio: bio
+    });
+    
+    settingsModal.classList.add('hidden');
+    
+    // Обновляем сохранённую сессию
+    saveSession();
+});
+
+logoutBtn.addEventListener('click', () => {
+    if (confirm('Вы уверены, что хотите выйти?')) {
+        clearSession();
+        location.reload();
+    }
+});
+
+// Клик на аватарку пользователя - открывает настройки
+document.getElementById('user-info-bar').addEventListener('click', () => {
+    settingsModal.classList.remove('hidden');
+});
+
+// === ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ===
+
+function showProfile(username) {
+    socket.emit('get-profile', { username });
+    
+    // Временно показываем модальное окно
+    profileModal.classList.remove('hidden');
+    profileUsername.textContent = username;
+    
+    // Подписываемся на данные профиля
+    socket.once('profile-data', (profile) => {
+        if (profile.username === username) {
+            profileAvatar.textContent = profile.avatar;
+            profileUsername.textContent = profile.username;
+            profileStatusText.textContent = profile.status || 'Привет! Я использую Milena 💜';
+            profileBioText.textContent = profile.bio || 'Пользователь не указал информацию о себе';
+            
+            // Создаём кнопки действий
+            profileActions.innerHTML = '';
+            
+            if (profile.username !== currentUsername) {
+                // Кнопка личного чата
+                const chatBtn = document.createElement('button');
+                chatBtn.className = 'btn-primary';
+                chatBtn.textContent = '💬 Написать';
+                chatBtn.onclick = () => {
+                    profileModal.classList.add('hidden');
+                    openPrivateChat(username);
+                };
+                profileActions.appendChild(chatBtn);
+                
+                // Кнопка друзей
+                if (profile.isFriend) {
+                    const removeFriendBtn = document.createElement('button');
+                    removeFriendBtn.className = 'btn-danger';
+                    removeFriendBtn.textContent = '✕ Удалить из друзей';
+                    removeFriendBtn.onclick = () => {
+                        socket.emit('remove-friend', username);
+                        profileModal.classList.add('hidden');
+                    };
+                    profileActions.appendChild(removeFriendBtn);
+                } else if (sentRequestsMap.has(username)) {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn-danger';
+                    cancelBtn.textContent = '✕ Отменить запрос';
+                    cancelBtn.onclick = () => {
+                        socket.emit('cancel-friend-request', username);
+                        sentRequestsMap.delete(username);
+                        profileModal.classList.add('hidden');
+                    };
+                    profileActions.appendChild(cancelBtn);
+                } else {
+                    const addFriendBtn = document.createElement('button');
+                    addFriendBtn.className = 'btn-success';
+                    addFriendBtn.textContent = '+ Добавить в друзья';
+                    addFriendBtn.onclick = () => {
+                        socket.emit('send-friend-request', username);
+                        sentRequestsMap.set(username, true);
+                        profileModal.classList.add('hidden');
+                    };
+                    profileActions.appendChild(addFriendBtn);
+                }
+            }
+        }
+    });
+}
+
+closeProfileBtn.addEventListener('click', () => {
+    profileModal.classList.add('hidden');
+});
+
+// === УВЕДОМЛЕНИЯ ===
+
+notificationsBtn.addEventListener('click', () => {
+    notificationsBar.classList.toggle('hidden');
+    if (!notificationsBar.classList.contains('hidden')) {
+        // Сбрасываем счётчик
+        notificationBadge.classList.add('hidden');
+        notificationBadge.textContent = '0';
+    }
+});
+
+closeNotificationsBtn.addEventListener('click', () => {
+    notificationsBar.classList.add('hidden');
+});
+
+function showNotification(type, text) {
+    notifications.push({ type, text, timestamp: Date.now() });
+    
+    // Обновляем список уведомлений
+    updateNotificationsList();
+    
+    // Обновляем бейдж
+    const unreadCount = notifications.length;
+    if (unreadCount > 0) {
+        notificationBadge.classList.remove('hidden');
+        notificationBadge.textContent = unreadCount;
+    }
+}
+
+function updateNotificationsList() {
+    notificationsList.innerHTML = '';
+    
+    if (notifications.length === 0) {
+        notificationsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #72767d;">Нет уведомлений</div>';
+        return;
+    }
+    
+    notifications.reverse().forEach((notif, index) => {
+        const notifEl = document.createElement('div');
+        notifEl.className = `notification-item ${notif.type}`;
+        notifEl.textContent = notif.text;
+        notificationsList.appendChild(notifEl);
+    });
+    
+    notifications.reverse(); // Возвращаем обратно
+}
+
+socket.on('notification', (data) => {
+    showNotification(data.type, data.text);
+});
+
+// === ЗАПРОСЫ В ДРУЗЬЯ ===
+
+socket.on('friend-requests-update', (requests) => {
+    friendRequests = requests;
+    updateFriendRequestsList();
+});
+
+function updateFriendRequestsList() {
+    requestsCountEl.textContent = friendRequests.length;
+    friendRequestsList.innerHTML = '';
+    
+    if (friendRequests.length === 0) {
+        friendRequestsSection.style.display = 'none';
+        return;
+    }
+    
+    friendRequestsSection.style.display = 'block';
+    
+    friendRequests.forEach(request => {
+        const requestEl = document.createElement('div');
+        requestEl.className = 'request-item';
+        
+        // Получаем аватарку пользователя, если он онлайн
+        let avatar = '😀';
+        const onlineUser = Array.from(onlineUsers.values())
+            .find(u => u.username === request.from);
+        if (onlineUser) {
+            avatar = onlineUser.avatar;
+        }
+        
+        requestEl.innerHTML = `
+            <div class="request-header">
+                <span class="request-avatar">${avatar}</span>
+                <span class="request-username">${request.from}</span>
+            </div>
+            <div class="request-actions">
+                <button class="btn-accept" data-from="${request.from}">✓ Принять</button>
+                <button class="btn-decline" data-from="${request.from}">✕ Отклонить</button>
+            </div>
+        `;
+        
+        requestEl.querySelector('.btn-accept').addEventListener('click', () => {
+            socket.emit('accept-friend-request', request.from);
+        });
+        
+        requestEl.querySelector('.btn-decline').addEventListener('click', () => {
+            socket.emit('decline-friend-request', request.from);
+        });
+        
+        friendRequestsList.appendChild(requestEl);
+    });
+}
+
+socket.on('friend-request-sent', (data) => {
+    showNotification('success', `Запрос отправлен ${data.to}`);
+    sentRequestsMap.set(data.to, true);
+    updateUsersList();
+});
 
 // === ЧАТ ===
 sendBtn.addEventListener('click', sendMessage);
@@ -187,17 +533,15 @@ let onlineUsers = new Map();
 
 socket.on('users-update', (usersData) => {
     usersCountEl.textContent = usersData.length;
-    usersListEl.innerHTML = '';
     
     onlineUsers.clear();
     usersData.forEach(userData => {
         if (userData.username !== currentUsername) {
             onlineUsers.set(userData.socketId, userData);
-            
-            const userDiv = createUserItem(userData, false);
-            usersListEl.appendChild(userDiv);
         }
     });
+    
+    updateUsersList();
     
     // Обновляем кнопки
     const hasOtherUsers = usersData.length > 1;
@@ -208,10 +552,20 @@ socket.on('users-update', (usersData) => {
     updateFriendsList();
 });
 
+function updateUsersList() {
+    usersListEl.innerHTML = '';
+    
+    onlineUsers.forEach(userData => {
+        const userDiv = createUserItem(userData, false);
+        usersListEl.appendChild(userDiv);
+    });
+}
+
 // === СПИСОК ДРУЗЕЙ ===
 socket.on('friends-update', (friends) => {
     friendsList = new Set(friends);
     updateFriendsList();
+    updateUsersList(); // Обновляем список всех пользователей
 });
 
 function updateFriendsList() {
@@ -243,10 +597,21 @@ function createUserItem(userData, isFriend) {
     
     const userInfo = document.createElement('div');
     userInfo.className = 'user-info-inline';
-    userInfo.innerHTML = `
-        <span class="user-avatar-small">${userData.avatar || '😀'}</span>
-        <span class="user-name-text">${userData.username}</span>
-    `;
+    
+    const avatarSpan = document.createElement('span');
+    avatarSpan.className = 'user-avatar-small';
+    avatarSpan.textContent = userData.avatar || '😀';
+    avatarSpan.onclick = (e) => {
+        e.stopPropagation();
+        showProfile(userData.username);
+    };
+    
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'user-name-text';
+    nameSpan.textContent = userData.username;
+    
+    userInfo.appendChild(avatarSpan);
+    userInfo.appendChild(nameSpan);
     
     const buttonsDiv = document.createElement('div');
     buttonsDiv.style.display = 'flex';
@@ -274,12 +639,22 @@ function createUserItem(userData, isFriend) {
             e.stopPropagation();
             socket.emit('remove-friend', userData.username);
         };
+    } else if (sentRequestsMap.has(userData.username)) {
+        friendBtn.textContent = '⏳';
+        friendBtn.classList.add('pending');
+        friendBtn.title = 'Запрос отправлен';
+        friendBtn.onclick = (e) => {
+            e.stopPropagation();
+            socket.emit('cancel-friend-request', userData.username);
+            sentRequestsMap.delete(userData.username);
+        };
     } else {
         friendBtn.textContent = '+';
         friendBtn.title = 'Добавить в друзья';
         friendBtn.onclick = (e) => {
             e.stopPropagation();
-            socket.emit('add-friend', userData.username);
+            socket.emit('send-friend-request', userData.username);
+            sentRequestsMap.set(userData.username, true);
         };
     }
     
@@ -704,4 +1079,4 @@ window.addEventListener('beforeunload', () => {
     }
 });
 
-console.log('Milena загружена!');
+console.log('Milena загружена! 💜');
